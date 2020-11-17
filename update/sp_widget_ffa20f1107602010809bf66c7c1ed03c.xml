@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function($scope, $rootScope, spUtil) {
+	var c = this;
+	
+	c.saving = {};
+	
+	$rootScope.$on('selectNote', function(event, noteID) {
+		c.server.get({
+			action: 'getNote',
+			noteID: noteID
+		}).then(function(r) {
+			c.data.title = r.data.note.title;
+			c.data.note = r.data.note.note;
+			c.data.noteID = r.data.note.sys_id;
+		});
+	});
+	
+	c.updateNote = function(updateType) {
+		c.saving[updateType] = false;
+		c.server.get({
+			action: 'updateNote',
+			noteID: c.data.noteID,
+			noteBody: c.data.note,
+			noteTitle: c.data.title
+		}).then(function(reply) {
+			c.saving[updateType] = true;
+			if (reply.data.note) {
+				$rootScope.$emit('updatedNote', reply.data.note);
+			}
+		});
+		
+		setTimeout(function() {
+			delete c.saving[updateType];
+		}, 2000);
+	};
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.fade {
+  &amp;.ng-hide {
+  	opacity: 0;
+  }
+  &amp;.ng-hide-remove,
+  &amp;.ng-hide-add {
+    display: block !important;
+  }
+  
+  &amp;.ng-hide-remove {
+    transition: all linear 1000ms;
+  }
+  
+  &amp;.ng-hide-add {
+    transition: all linear 500ms;
+  }
+  
+}
+
+</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>notes_body</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Notes Body</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {
+  /* populate the 'data' object */
+  
+	if (input && input.noteID) {
+		var note = new GlideRecord('x_snc_createnotes_note');
+		if (note.get(input.noteID)) {
+			if (input.action == 'getNote') {
+				data.note = {};
+				$sp.getRecordValues(data.note, note, 'title,note,sys_id');
+			} else if (input.action == 'updateNote') {
+				note.title = input.noteTitle;
+				note.note = input.noteBody;
+				note.update();
+				
+				data.note = {};
+				$sp.getRecordValues(data.note, note ,'title,note,sys_id');
+				
+				if (data.note.note.length > 20) {
+					data.note.note = data.note.note.slice(0, 20);
+				}
+			}
+		}
+	}
+
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2020-11-17 11:15:10</sys_created_on>
+        <sys_id>ffa20f1107602010809bf66c7c1ed03c</sys_id>
+        <sys_mod_count>21</sys_mod_count>
+        <sys_name>Notes Body</sys_name>
+        <sys_package display_value="CreateNotes" source="x_snc_createnotes">df5fd9a5090232007f44e1046c8ff69f</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CreateNotes">df5fd9a5090232007f44e1046c8ff69f</sys_scope>
+        <sys_update_name>sp_widget_ffa20f1107602010809bf66c7c1ed03c</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2020-11-17 15:22:16</sys_updated_on>
+        <template><![CDATA[<div class="panel panel-default" ng-show="c.data.noteID">
+  <div class="panel-heading clearfix">
+    <div class="row">
+      <div class="col-md-12">
+        <input class="form-control"
+               id="note-title"
+               ng-model="c.data.title"
+               ng-change="c.updateNote('title')"
+               ng-model-options="{debounce: 1000}" />
+        <span class="saving-indicator" ng-show="c.saving['title'] == false">Saving...</span>
+        <span class="saving-indicator fade" ng-show="c.saving['title'] == true">Saved!</span>
+      </div>
+    </div>
+  </div>
+  <div class="panel-body">
+    <textarea class="form-control"
+              id="note-body"
+              ng-model="c.data.note"
+              ng-change="c.updateNote('note')"
+              ng-model-options="{debounce: 1000}"></textarea>
+    <span class="saving-indicator" ng-show="c.saving['note'] == false">Saving...</span>
+    <span class="saving-indicator" ng-show="c.saving['note'] == true">Saved!</span>
+  </div>
+</div>]]></template>
+    </sp_widget>
+</record_update>
